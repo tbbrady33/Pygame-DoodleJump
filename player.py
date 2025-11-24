@@ -28,6 +28,7 @@ from singleton import Singleton
 from sprite import Sprite
 from level import Level
 import settings as config
+from Controller_MPC import MPC
 
 
 
@@ -59,6 +60,8 @@ class Player(Sprite, Singleton):
 		self.accel = .5
 		self.deccel = .6
 		self.dead = False
+		self.last_platform = None 
+
 	
 
 	def _fix_velocity(self) -> None:
@@ -125,6 +128,7 @@ class Player(Sprite, Singleton):
 
 				# check collisions with platform
 				if collide_rect(self,platform):
+					self.last_platform = platform
 					self.onCollide(platform)
 					platform.onCollide()
 
@@ -139,11 +143,21 @@ class Player(Sprite, Singleton):
 			return
 		#Velocity update (apply gravity, input acceleration)
 		self._velocity.y += self.gravity
-		if self._input: # accelerate
-			self._velocity.x += self._input*self.accel
+
+		# if self._input: # accelerate
+		# 	self._velocity.x += self._input*self.accel
+		# elif self._velocity.x: # deccelerate
+		# 	self._velocity.x -= getsign(self._velocity.x)*self.deccel
+		# 	self._velocity.x = round(self._velocity.x)
+
+		## Added the following portion - Sanzhar
+		u = MPC.compute_control([self.rect.x, self.rect.y, self.velocity.x, self.velocity.y]) 
+		self.input = u
+		if self.input: # accelerate
+			self._velocity.x += self.input*self.accel
 		elif self._velocity.x: # deccelerate
 			self._velocity.x -= getsign(self._velocity.x)*self.deccel
-			self._velocity.x = round(self._velocity.x)
+			self._velocity.x = round(self._velocity.x)		
 		self._fix_velocity()
 
 		#Position Update (prevent x-axis to be out of screen)
