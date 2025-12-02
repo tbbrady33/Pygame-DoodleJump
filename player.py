@@ -28,6 +28,7 @@ from singleton import Singleton
 from sprite import Sprite
 from level import Level
 import settings as config
+from Dynamics import dynamics
 
 
 
@@ -56,9 +57,16 @@ class Player(Sprite, Singleton):
 		self._bonus_jumpforce = config.PLAYER_BONUS_JUMPFORCE
 
 		self.gravity = config.GRAVITY
-		self.accel = .5
-		self.deccel = .6
+		self.accel = .8
+		self.deccel = .9
 		self.dead = False
+
+		self.dynamics = dynamics(
+            gravity=config.GRAVITY,
+            accel=self.accel,
+            deccel=self.deccel,
+            max_vel=Vector2(config.PLAYER_MAX_SPEED, 100)
+        )
 	
 
 	def _fix_velocity(self) -> None:
@@ -78,6 +86,10 @@ class Player(Sprite, Singleton):
 		self.camera_rect = self.__startrect.copy()
 		self.dead = False
 
+	"""
+	NOTE:This function only allows velocities to be -v0, v0 and 0, we might want to relax
+	the problem to move it away from a MIQP
+	"""
 
 	def handle_event(self,event:Event) -> None:
 		""" Called in main loop foreach user input event.
@@ -99,9 +111,11 @@ class Player(Sprite, Singleton):
 				self._input = 0
 	
 
-	def jump(self,force:float=None) -> None:
-		if not force:force = self._jumpforce
+	def jump(self) -> None:
+		force = self._jumpforce
 		self._velocity.y = -force
+
+		self.dynamics.updateyv(-force)
 
 
 	def onCollide(self, obj:Sprite) -> None:
@@ -129,25 +143,24 @@ class Player(Sprite, Singleton):
 					platform.onCollide()
 
 
-	def update(self) -> None:
-		""" For position and velocity updates.
-		Should be called each frame.
-		"""
-		#Check if player out of screen: should be dead
-		if self.camera_rect.y>config.YWIN*2:
+	def update(self):
+		# die check
+		if self.camera_rect.y > config.YWIN * 2:
 			self.dead = True
 			return
-		#Velocity update (apply gravity, input acceleration)
-		self._velocity.y += self.gravity
-		if self._input: # accelerate
-			self._velocity.x += self._input*self.accel
-		elif self._velocity.x: # deccelerate
-			self._velocity.x -= getsign(self._velocity.x)*self.deccel
-			self._velocity.x = round(self._velocity.x)
-		self._fix_velocity()
 
-		#Position Update (prevent x-axis to be out of screen)
-		self.rect.x = (self.rect.x+self._velocity.x)%(config.XWIN-self.rect.width)
-		self.rect.y += self._velocity.y
 
+		u_x = self._input * self.accel   # ← YOU DEFINE THIS
+		# u_y = self.dynamics.rocket                # rocket thrust if any
+		u_y = 0
+		px, py, vx, vy  = self.dynamics.step(u_x, u_y)
+
+
+		self.rect.x = px
+		self.rect.y = py
+
+		# Update velocity inside the Player object
+		self._velocity = Vector2(vx, vy)
+
+		# collision detection
 		self.collisions()
