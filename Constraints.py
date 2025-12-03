@@ -22,19 +22,25 @@ model.y[0].fix(y0)
 model.vx[0].fix(vx0)
 model.vy[0].fix(vy0)
 
+#1. agent can't go below/above the screen
 def within_screen_y_rule(model, t):
     return 0 <= model.y[t] <= window_height
-
+    
+#2. agent can't go far left/right the screen
 def within_screen_x_rule(model, t):
     return 0 <= model.x[t] <= window_width
 
+#3. agent should stay alive
 def agent_alive(model, t):
     return model.y[t] <= 2 * window_height
 
+#4. Hits platform during fall
 def hit_platform_rule(model, t):
+    #is true only when falling (vy < 0) & above platform
     return model.y[t] >= plat_y_top + 10000 * (model.vy[t] / vy_min)
 
 #model.constraint1 = Constraint(rule=within_screen_x_rule)
 #model.constraint2 = Constraint(rule=within_screen_y_rule)
 #model.constraint3 = Constraint(rule=agent_alive)
 model.constraint4 = Constraint(rule=hit_platform_rule)
+
