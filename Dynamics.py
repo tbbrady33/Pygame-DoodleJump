@@ -18,7 +18,7 @@ getsign = lambda x : copysign(1, x)
 class dynamics:
     
     def __init__(self,
-                 dt=.25,            # simulation timestep (60 FPS default)
+                 dt=1,
                  gravity=config.GRAVITY,
                  max_vel=Vector2(config.PLAYER_MAX_SPEED, 100),
                  accel = .8,
@@ -71,6 +71,7 @@ class dynamics:
             [gravity]
         ], dtype=float)
 
+
     def clamp_velocity(self):
         """Clamp vx, vy to the allowed maximum velocities."""
         # vx = x[2], vy = x[3]
@@ -84,6 +85,13 @@ class dynamics:
             vx = max(-max_vx, min(max_vx, vx))
             vy = max(-max_vy, min(max_vy, vy))
 
+        self.x[2, 0] = vx
+        self.x[3, 0] = vy
+
+    def set_state(self, x, y, vx, vy):
+        """Hard-set the internal state to match the sprite."""
+        self.x[0, 0] = x
+        self.x[1, 0] = y
         self.x[2, 0] = vx
         self.x[3, 0] = vy
 

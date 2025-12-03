@@ -67,6 +67,9 @@ class Player(Sprite, Singleton):
             deccel=self.deccel,
             max_vel=Vector2(config.PLAYER_MAX_SPEED, 100)
         )
+
+		self.dynamics.set_state(self.rect.x, self.rect.y, 0.0, 0.0)
+
 	
 
 	def _fix_velocity(self) -> None:
@@ -85,6 +88,7 @@ class Player(Sprite, Singleton):
 		self.rect = self.__startrect.copy()
 		self.camera_rect = self.__startrect.copy()
 		self.dead = False
+		self.dynamics.set_state(self.rect.x, self.rect.y, 0.0, 0.0)
 
 	"""
 	NOTE:This function only allows velocities to be -v0, v0 and 0, we might want to relax
@@ -111,16 +115,24 @@ class Player(Sprite, Singleton):
 				self._input = 0
 	
 
-	def jump(self) -> None:
-		force = self._jumpforce
+	def jump(self, force=None) -> None:
+		if force is None:
+			force = self._jumpforce
+
+		# Upward velocity
 		self._velocity.y = -force
 
-		self.dynamics.updateyv(-force)
+		# Also update dynamics
+		self.dynamics.x[3, 0] = -force
+		self.dynamics.x[0, 0] = self.rect.x
+		self.dynamics.x[1, 0] = self.rect.y
 
 
 	def onCollide(self, obj:Sprite) -> None:
 		self.rect.bottom = obj.rect.top
 		self.jump()
+		self.dynamics.set_state(self.rect.x, self.rect.y, self._velocity.x, self._velocity.y)
+
 	
 
 	def collisions(self) -> None:
@@ -136,6 +148,8 @@ class Player(Sprite, Singleton):
 				if platform.bonus and collide_rect(self,platform.bonus):
 					self.onCollide(platform.bonus)
 					self.jump(platform.bonus.force)
+					self.dynamics.set_state(self.rect.x, self.rect.y, self._velocity.x, self._velocity.y)
+
 
 				# check collisions with platform
 				if collide_rect(self,platform):
