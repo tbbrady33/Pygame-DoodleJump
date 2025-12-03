@@ -29,6 +29,8 @@ from sprite import Sprite
 from level import Level
 import settings as config
 from Dynamics import dynamics
+from Controller_MPC import MPC
+
 
 
 
@@ -150,17 +152,31 @@ class Player(Sprite, Singleton):
 			return
 
 
-		u_x = self._input * self.accel   # ← YOU DEFINE THIS
-		# u_y = self.dynamics.rocket                # rocket thrust if any
-		u_y = 0
-		px, py, vx, vy  = self.dynamics.step(u_x, u_y)
+		# u_x = self._input * self.accel   # ← YOU DEFINE THIS
+		# # u_y = self.dynamics.rocket                # rocket thrust if any
+		# u_y = 0
+		# px, py, vx, vy  = self.dynamics.step(u_x, u_y)
 
 
-		self.rect.x = px
-		self.rect.y = py
+		# self.rect.x = px
+		# self.rect.y = py
 
-		# Update velocity inside the Player object
-		self._velocity = Vector2(vx, vy)
+		# # Update velocity inside the Player object
+		# self._velocity = Vector2(vx, vy)
+
+		self._velocity.y += self.gravity
+		u = MPC.compute_control([self.rect.x, self.rect.y, self.velocity.x, self.velocity.y]) 
+		self.input = u
+		if self.input: # accelerate
+			self._velocity.x += self.input*self.accel
+		elif self._velocity.x: # deccelerate
+			self._velocity.x -= getsign(self._velocity.x)*self.deccel
+			self._velocity.x = round(self._velocity.x)		
+		self._fix_velocity()
+
+		#Position Update (prevent x-axis to be out of screen)
+		self.rect.x = (self.rect.x+self._velocity.x)%(config.XWIN-self.rect.width)
+		self.rect.y += self._velocity.y
 
 		# collision detection
 		self.collisions()
