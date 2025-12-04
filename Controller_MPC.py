@@ -1,5 +1,4 @@
 from level import Level
-from player import Player
 import settings as config
 import casadi as ca
 import math
@@ -9,41 +8,42 @@ import settings as config
 import numpy as np
 
 class PlatformState:
-    x: float
-    y: float
-    width: float
-    height: float
-    breakable: bool
-    has_bonus: bool
-    bonus_force: float | None
+    def __init__(self,x,y,width,height,breakable):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.breakable = breakable
 
 class MPCController:
-    def __init__(self, horizon = 10, dt = 1/60, max_vel=Vector2(config.PLAYER_MAX_SPEED, 100)):
+    def __init__(self, level,horizon = 10, dt = 1/60, max_vel=Vector2(config.PLAYER_MAX_SPEED, 100)):
         self.horizon = horizon
         self.dt = dt
+        self.levell = level
         self.model = dynamics(dt)
         self.opti = ca.Opti()
-        self.X = self.opti.variable(4, self.N+1)
-        self.U = self.opti.variable(1, self.N)
+        self.X = self.opti.variable(4, self.horizon+1)
+        self.U = self.opti.variable(1, self.horizon)
         self.X0 = self.opti.parameter(4)
         self.X_target = self.opti.parameter(1)
         self.platforms = self.get_platforms()
-        self.player_state = self.get_player_state()
         self.last_platform = None
         self.window_width = config.XWIN
         self.window_height = config.YWIN
         self.max_vel = max_vel
+   
         self._build_mpc()
+    
 
 
     def _build_mpc(self):
 
         cost = 0
 
-        for k in range(self.N):
+        for k in range(self.horizon):
             Xk = self.X[:, k]
             Uk = self.U[:, k]
-            X_next = self.model.step(Xk, Uk)
+            X_next = self.model.step_symbolic(Xk, Uk)
             self.opti.subject_to(self.X[:, k+1] == X_next)
 
             cost += (X_next[0] - self.X_target)**2
@@ -70,32 +70,29 @@ class MPCController:
         self.opti.solver("ipopt", {"print_time": False}, {"print_level": 0})
 
     
-    def get_player_state(self):
-        player = Player.instance
-        p_state = [player.rect.x, player.rect.y, player._velocity.x, player._velocity.y] 
+    # def get_player_state(self):
+    #     player = Player.instance
+    #     p_state = [player.rect.x, player.rect.y, player._velocity.x, player._velocity.y] 
 
-        return p_state
+    #     return p_state
     
     def get_platforms(self): 
-        level = Level.instance
 
         platforms = []
-        for p in level.platforms:
+        for p in self.levell.platforms:
             platforms.append(PlatformState(
                 x=p.rect.x,
                 y=p.rect.y,
                 width=p.rect.width,
                 height=p.rect.height,
                 breakable=p.breakable,
-                has_bonus=(p.bonus is not None),
-                bonus_force=(p.bonus.force if p.bonus else None)
             ))
 
         return platforms
 
     def get_safe_platforms(self):
         safe = []
-        for p in Level.instance.platforms:
+        for p in self.levell.platforms:
             if not p.breakable:
                 safe.append(PlatformState(
                     x=p.rect.x,
@@ -103,8 +100,6 @@ class MPCController:
                     width=p.rect.width,
                     height=p.rect.height,
                     breakable=p.breakable,
-                    has_bonus=(p.bonus is not None),
-                    bonus_force=(p.bonus.force if p.bonus else None)
                 ))
         return safe
  
@@ -148,5 +143,5 @@ class MPCController:
             return 0
 
 
-MPC = MPCController()
+# MPC = MPCController()
 

@@ -11,6 +11,8 @@ from pygame.event import Event
 
 import settings as config
 import numpy as np
+import casadi as cs
+
 
 
 getsign = lambda x : copysign(1, x)
@@ -121,4 +123,25 @@ class dynamics:
 
         return self.get_state()
 
-      
+    def step_symbolic(self, X, U):
+        """
+        Discrete-time one-step dynamics for MPC using CasADi symbols.
+        X: 4x1 CasADi vector (SX/MX)
+        U: 2x1 CasADi vector (SX/MX)
+        Returns X_next: 4x1 CasADi vector
+        """
+        # Convert constant matrices to CasADi DM
+        A = cs.DM(self.A)  # 4x4
+        B = cs.DM(self.B)  # 4x2
+        E = cs.DM(self.E)  # 4x1
+        c = cs.DM(self.c)  # 4x1
+
+        d = self.wind  # scalar (float)
+
+        # Continuous-time dynamics: x_dot = A X + B U + E d + c
+        x_dot = cs.mtimes(A, X) + cs.mtimes(B, U) + E * d + c
+
+        # Euler discretization: X_next = X + dt * x_dot
+        X_next = X + self.dt * x_dot
+
+        return X_next
