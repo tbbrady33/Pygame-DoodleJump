@@ -23,6 +23,8 @@ from pygame.math import Vector2
 from pygame.locals import KEYDOWN,KEYUP,K_LEFT,K_RIGHT
 from pygame.sprite import collide_rect
 from pygame.event import Event
+from Controller_MPC import MPCController
+import numpy as np
 
 from singleton import Singleton
 from sprite import Sprite
@@ -35,6 +37,7 @@ from Dynamics import dynamics
 
 #Return the sign of a number: getsign(-5)-> -1
 getsign = lambda x : copysign(1, x)
+
 
 class Player(Sprite, Singleton):
 	"""
@@ -95,7 +98,9 @@ class Player(Sprite, Singleton):
 	def handle_event_MPC_input(self) -> None:
 		""" Should be called in the main loop at each time step and then calculate
 		the control"""
-		
+		control = MPCController()
+		self.input_ = control.compute_control(np.array(self.dynamics.get_state()))
+
 		return
 	"""
 	NOTE:This function only allows velocities to be -v0, v0 and 0, we might want to relax

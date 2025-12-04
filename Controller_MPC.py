@@ -57,12 +57,12 @@ class MPCController:
             self.opti.subject_to(self.X[1, k] >= 0)
             self.opti.subject_to(self.X[1, k] <= self.window_height)
             self.opti.subject_to(self.X[1, k] <= 2 * self.window_height)
-            for p in self.platforms:
-                plat_top = p.y
-                big_M = 10000
-                self.opti.subject_to(
-                    self.X[1, k] >= plat_top + big_M * (self.X[3, k] / vy_min)
-                )
+            # for p in self.platforms:
+            #     plat_top = p.y
+            #     big_M = 10000
+                # self.opti.subject_to(
+                #     self.X[1, k] >= plat_top + big_M * (self.X[3, k] / vy_min)
+                # )
 
         self.opti.subject_to(self.X[:, 0] == self.X0)
         self.opti.minimize(cost)
@@ -140,6 +140,7 @@ class MPCController:
 
         try:
             sol = self.opti.solve()
+            print(sol)
             return float(sol.value(self.U[0, 0]))
         except:
             return 0
