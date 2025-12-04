@@ -6,6 +6,7 @@ import math
 from Dynamics import dynamics
 from pygame.math import Vector2
 import settings as config
+import numpy as np
 
 class PlatformState:
     x: float
@@ -107,8 +108,8 @@ class MPCController:
                 ))
         return safe
  
-    def choose_target_platform(self):
-        px, py, vx, vy = self.get_player_state()
+    def choose_target_platform(self, x, y):
+        px, py = x, y
         safe = self.get_safe_platforms()
         best = None
         best_dist = float("inf")
@@ -126,9 +127,10 @@ class MPCController:
         return best
 
 
-    def compute_control(self):
-        X0_val = self.get_player_state()
-        target = self.choose_target_platform()
+    def compute_control(self, state):
+
+        X0_val = state
+        target = self.choose_target_platform(state[0], state[1])
 
         if not target:
             return 0
