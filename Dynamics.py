@@ -21,7 +21,7 @@ class dynamics:
                  dt=1,
                  gravity=config.GRAVITY,
                  max_vel=Vector2(config.PLAYER_MAX_SPEED, 100),
-                 accel = .8,
+                 accel = .5,
                  deccel =.6):
 
         self.dt = dt

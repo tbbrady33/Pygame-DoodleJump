@@ -91,6 +91,12 @@ class Player(Sprite, Singleton):
 		self.dead = False
 		self.dynamics.set_state(self.rect.x, self.rect.y, 0.0, 0.0)
 
+
+	def handle_event_MPC_input(self) -> None:
+		""" Should be called in the main loop at each time step and then calculate
+		the control"""
+		
+		return
 	"""
 	NOTE:This function only allows velocities to be -v0, v0 and 0, we might want to relax
 	the problem to move it away from a MIQP
