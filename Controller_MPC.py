@@ -4,6 +4,8 @@ import settings as config
 import casadi as ca
 import math
 from dynamics import Dynamics
+from pygame.math import Vector2
+import settings as config
 
 class PlatformState:
     x: float
@@ -15,7 +17,7 @@ class PlatformState:
     bonus_force: float | None
 
 class MPCController:
-    def __init__(self, horizon = 10, dt = 1/60):
+    def __init__(self, horizon = 10, dt = 1/60, max_vel=Vector2(config.PLAYER_MAX_SPEED, 100)):
         self.horizon = horizon
         self.dt = dt
         self.model = Dynamics(dt)
@@ -27,7 +29,9 @@ class MPCController:
         self.platforms = self.get_platforms()
         self.player_state = self.get_player_state()
         self.last_platform = None
-        self.window_width, self.window_height = self.window.get_size()
+        self.window_width = config.XWIN
+        self.window_height = config.YWIN
+        self.max_vel = max_vel
 
 
     def _build_mpc(self):
@@ -45,8 +49,8 @@ class MPCController:
             self.opti.subject_to(Uk <= 1)
             self.opti.subject_to(Uk >= -1)
 
-            self.opti.subject_to(self.X[2, k] <= self.model.max_vx)
-            self.opti.subject_to(self.X[2, k] >= -self.model.max_vx)
+            self.opti.subject_to(self.X[2, k] <= self.max_vel.x)
+            self.opti.subject_to(self.X[2, k] >= -self.max_vel.x)
             self.opti.subject_to(self.X[0, k] >= 0)  
             self.opti.subject_to(self.X[0, k] <= self.window_width)
             self.opti.subject_to(self.X[1, k] >= 0)
@@ -63,6 +67,7 @@ class MPCController:
         self.opti.minimize(cost)
         self.opti.solver("ipopt", {"print_time": False}, {"print_level": 0})
 
+    
     def get_player_state(self):
         player = Player.instance
         p_state = [player.rect.x, player.rect.y, player._velocity.x, player._velocity.y] 
