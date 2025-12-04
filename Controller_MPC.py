@@ -27,6 +27,7 @@ class MPCController:
         self.platforms = self.get_platforms()
         self.player_state = self.get_player_state()
         self.last_platform = None
+        self.window_width, self.window_height = self.window.get_size()
 
 
     def _build_mpc(self):
@@ -46,6 +47,17 @@ class MPCController:
 
             self.opti.subject_to(self.X[2, k] <= self.model.max_vx)
             self.opti.subject_to(self.X[2, k] >= -self.model.max_vx)
+            self.opti.subject_to(self.X[0, k] >= 0)  
+            self.opti.subject_to(self.X[0, k] <= self.window_width)
+            self.opti.subject_to(self.X[1, k] >= 0)
+            self.opti.subject_to(self.X[1, k] <= self.window_height)
+            self.opti.subject_to(self.X[1, k] <= 2 * self.window_height)
+            for p in self.platforms:
+                plat_top = p.y
+                big_M = 10000
+                self.opti.subject_to(
+                    self.X[1, k] >= plat_top + big_M * (self.X[3, k] / vy_min)
+                )
 
         self.opti.subject_to(self.X[:, 0] == self.X0)
         self.opti.minimize(cost)
