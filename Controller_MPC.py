@@ -3,7 +3,7 @@ from player import Player
 import settings as config
 import casadi as ca
 import math
-from dynamics import Dynamics
+from Dynamics import dynamics
 from pygame.math import Vector2
 import settings as config
 
@@ -20,7 +20,7 @@ class MPCController:
     def __init__(self, horizon = 10, dt = 1/60, max_vel=Vector2(config.PLAYER_MAX_SPEED, 100)):
         self.horizon = horizon
         self.dt = dt
-        self.model = Dynamics(dt)
+        self.model = dynamics(dt)
         self.opti = ca.Opti()
         self.X = self.opti.variable(4, self.N+1)
         self.U = self.opti.variable(1, self.N)
@@ -32,6 +32,7 @@ class MPCController:
         self.window_width = config.XWIN
         self.window_height = config.YWIN
         self.max_vel = max_vel
+        self._build_mpc()
 
 
     def _build_mpc(self):
