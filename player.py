@@ -50,6 +50,8 @@ class Player(Sprite, Singleton):
 	# (Overriding Sprite.__init__ constructor)
 	def __init__(self,*args):
 		#calling default Sprite constructor
+		self.wind = 0
+
 		Sprite.__init__(self,*args)
 		self.__startrect = self.rect.copy()
 		self.__maxvelocity = Vector2(config.PLAYER_MAX_SPEED,100)
@@ -101,7 +103,8 @@ class Player(Sprite, Singleton):
 		""" Should be called in the main loop at each time step and then calculate
 		the control"""
 		state = np.array(self.dynamics.get_state())
-		self._input = self.mpc.compute_control(state)
+		self._input= self.mpc.compute_control(state)
+		return self.wind
 
 	"""
 	NOTE:This function only allows velocities to be -v0, v0 and 0, we might want to relax
@@ -180,8 +183,8 @@ class Player(Sprite, Singleton):
 		u_x = self._input * self.accel   # ← YOU DEFINE THIS
 		# u_y = self.dynamics.rocket                # rocket thrust if any
 		u_y = 0
-		px, py, vx, vy  = self.dynamics.step(u_x)
-
+		px, py, vx, vy ,wind = self.dynamics.step(u_x)
+		self.wind = wind
 
 		self.rect.x = px
 		self.rect.y = py
