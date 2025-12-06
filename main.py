@@ -46,6 +46,7 @@ class Game(Singleton):
 		self.window = pygame.display.set_mode(config.DISPLAY,config.FLAGS)
 		self.clock = pygame.time.Clock()
 		self.wind = 0.0
+		self.start_time = pygame.time.get_ticks()
 
 		# Instances
 		self.camera = Camera()
@@ -56,6 +57,8 @@ class Game(Singleton):
 			*config.PLAYER_SIZE,# SIZE
 			config.PLAYER_COLOR#  COLOR
 		)
+		self.start_player_y = self.player.rect.y
+
 
 		# User Interface
 		self.score = 0
@@ -75,6 +78,9 @@ class Game(Singleton):
 		self.camera.reset()
 		self.lvl.reset()
 		self.player.reset()
+		self.start_time = pygame.time.get_ticks() 
+		self.start_player_y = self.player.rect.y 
+
 
 
 	def _event_loop(self):
@@ -102,10 +108,17 @@ class Game(Singleton):
 
 		if not self.player.dead:
 			self.camera.update(self.player.rect)
-			#calculate score and update UI txt
-			self.score=-self.camera.state.y//50
+
+			# --- Distance from start (in "meters") --- (50 pixels per meter)
+	
+			dy_pixels = max(0, self.start_player_y - self.player.rect.y)
+			self.score = dy_pixels // 50   
+
 			self.score_txt = config.SMALL_FONT.render(
-				str(self.score)+" m", 1, config.GRAY)
+				f"{self.score} m", 1, config.GRAY
+			)
+
+
 	
 
 	def _render_loop(self):
@@ -120,8 +133,20 @@ class Game(Singleton):
 		self.window.blit(self.score_txt, self.score_pos)# score txt
 
 		self._draw_wind_indicator()
-		pygame.display.update()# window update
-		self.clock.tick(config.FPS)# max loop/s
+
+		elapsed_ms = pygame.time.get_ticks() - self.start_time
+		elapsed_sec = elapsed_ms // 1000
+
+		minutes = elapsed_sec // 60
+		seconds = elapsed_sec % 60
+
+		time_str = f"{minutes:02d}:{seconds:02d}" 
+
+		time_txt = config.SMALL_FONT.render(time_str, True, config.GRAY)
+		self.window.blit(time_txt, (10, 40))  
+		pygame.display.update()
+		
+		self.clock.tick(config.FPS)
 
 	def _draw_wind_indicator(self):
 		"""Draw a small box in the corner with an arrow showing wind direction."""
