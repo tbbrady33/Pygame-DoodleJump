@@ -16,7 +16,7 @@ class PlatformState:
         self.breakable = breakable
 
 class MPCController:
-    def __init__(self, level,horizon = 10, dt = 1/60, max_vel=Vector2(config.PLAYER_MAX_SPEED, 100)):
+    def __init__(self, level,horizon = 10, dt = config.DT, max_vel=Vector2(config.PLAYER_MAX_SPEED, 100)):
         self.horizon = horizon
         self.dt = dt
         self.levell = level

@@ -86,12 +86,15 @@ class Game(Singleton):
 					self.close()
 				if event.key == pygame.K_RETURN and self.player.dead:
 					self.reset()
-			# self.player.handle_event(event)
-			self.player.handle_event_MPC_input(self.lvl)
+			# # self.player.handle_event(event)
+			# self.player.handle_event_MPC_input(self.lvl)
 
 
 	def _update_loop(self):
-		# ----------- Update -----------
+		# ----------- Update -----------\
+		if self.player.dead:
+			return
+		self.player.handle_event_MPC_input(self.lvl)
 		self.player.update()
 		self.lvl.update()
 

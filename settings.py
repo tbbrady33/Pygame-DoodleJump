@@ -10,6 +10,7 @@ HALF_XWIN,HALF_YWIN = XWIN/2,YWIN/2 # Center
 DISPLAY = (XWIN,YWIN)
 FLAGS = 0 #                           Fullscreen, resizeable... 
 FPS = 60 #                            Render frame rate
+DT = 0.25
 
 # Colors
 BLACK = (0,0,0)

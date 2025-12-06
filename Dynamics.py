@@ -20,7 +20,7 @@ getsign = lambda x : copysign(1, x)
 class dynamics:
     
     def __init__(self,
-                 dt=1,
+                 dt=config.DT,
                  gravity=config.GRAVITY,
                  max_vel=Vector2(config.PLAYER_MAX_SPEED, 100),
                  accel = .5,
@@ -52,11 +52,18 @@ class dynamics:
         ax_gain = accel / self.dt
         vy_gain = 0.0  
 
+        # self.B = np.array([
+        # [0,      0],
+        # [0,      0],
+        # [ax_gain, 0],
+        # [0,    vy_gain]
+        # ], dtype=float)
+
         self.B = np.array([
-        [0,      0],
-        [0,      0],
-        [ax_gain, 0],
-        [0,    vy_gain]
+        [0],
+        [0],
+        [ax_gain],
+        [0]
         ], dtype=float)
 
         self.E = np.array([
@@ -108,8 +115,9 @@ class dynamics:
 
     def updateyv(self, force):
         self.x[3, 0] = force
-    def step(self, u_x, u_y):
-        u = np.array([[u_x], [u_y]])
+    def step(self, u_x):
+        # u = np.array([[u_x], [u_y]])
+        u = np.array([[u_x]])
         d = np.array([[self.wind]])
 
         # Continuous dynamics: x_dot = A x + B u + E d + c
@@ -132,7 +140,7 @@ class dynamics:
         """
         # Convert constant matrices to CasADi DM
         A = cs.DM(self.A)  # 4x4
-        B = cs.DM(self.B)  # 4x2
+        B = cs.DM(self.B)  # 4x1
         E = cs.DM(self.E)  # 4x1
         c = cs.DM(self.c)  # 4x1
 

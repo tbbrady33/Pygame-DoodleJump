@@ -66,6 +66,7 @@ class Player(Sprite, Singleton):
 		self.dead = False
 
 		self.dynamics = dynamics(
+			dt = config.DT,
             gravity=config.GRAVITY,
             accel=self.accel,
             deccel=self.deccel,
@@ -73,6 +74,7 @@ class Player(Sprite, Singleton):
         )
 
 		self.dynamics.set_state(self.rect.x, self.rect.y, 0.0, 0.0)
+		self.mpc = MPCController(Level.instance)
 
 	
 
@@ -98,8 +100,8 @@ class Player(Sprite, Singleton):
 	def handle_event_MPC_input(self,level) -> None:
 		""" Should be called in the main loop at each time step and then calculate
 		the control"""
-		control = MPCController(level)
-		self._input = control.compute_control(np.array(self.dynamics.get_state()))
+		state = np.array(self.dynamics.get_state())
+		self._input = self.mpc.compute_control(state)
 
 	"""
 	NOTE:This function only allows velocities to be -v0, v0 and 0, we might want to relax
@@ -178,7 +180,7 @@ class Player(Sprite, Singleton):
 		u_x = self._input * self.accel   # ← YOU DEFINE THIS
 		# u_y = self.dynamics.rocket                # rocket thrust if any
 		u_y = 0
-		px, py, vx, vy  = self.dynamics.step(u_x, u_y)
+		px, py, vx, vy  = self.dynamics.step(u_x)
 
 
 		self.rect.x = px
