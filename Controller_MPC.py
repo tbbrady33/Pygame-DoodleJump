@@ -53,11 +53,11 @@ class MPCController:
 
             self.opti.subject_to(self.X[2, k] <= self.max_vel.x)
             self.opti.subject_to(self.X[2, k] >= -self.max_vel.x)
-            self.opti.subject_to(self.X[0, k] >= 0)  
-            self.opti.subject_to(self.X[0, k] <= self.window_width)
-            self.opti.subject_to(self.X[1, k] >= 0)
-            self.opti.subject_to(self.X[1, k] <= self.window_height)
-            self.opti.subject_to(self.X[1, k] <= 2 * self.window_height)
+            # self.opti.subject_to(self.X[0, k] >= 0)  
+            # self.opti.subject_to(self.X[0, k] <= self.window_width)
+            # self.opti.subject_to(self.X[1, k] >= 0)
+            # self.opti.subject_to(self.X[1, k] <= self.window_height)
+            # self.opti.subject_to(self.X[1, k] <= 2 * self.window_height)
             # for p in self.platforms:
             #     plat_top = p.y
             #     big_M = 10000
