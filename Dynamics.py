@@ -8,6 +8,7 @@ from pygame.math import Vector2
 from pygame.locals import KEYDOWN,KEYUP,K_LEFT,K_RIGHT
 from pygame.sprite import collide_rect
 from pygame.event import Event
+import random
 
 import settings as config
 import numpy as np
@@ -39,6 +40,11 @@ class dynamics:
         self.wind = 0.0     # horizontal wind force
         self.rocket = 0.0   # upward force
 
+        self.wind_std = .1
+        self.max_wind = .8
+        self.step_count = 0
+
+
 
         #A matrix continuous time
         self.A = np.array(
@@ -52,19 +58,12 @@ class dynamics:
         ax_gain = accel / self.dt
         vy_gain = 0.0  
 
-        # self.B = np.array([
-        # [0,      0],
-        # [0,      0],
-        # [ax_gain, 0],
-        # [0,    vy_gain]
-        # ], dtype=float)
-
         self.B = np.array([
-        [0],
-        [0],
-        [ax_gain],
-        [0]
-        ], dtype=float)
+            [0],
+            [0],
+            [ax_gain],
+            [0]
+        ], dtype=float) 
 
         self.E = np.array([
             [0],
@@ -79,6 +78,24 @@ class dynamics:
             [0],
             [gravity]
         ], dtype=float)
+
+    def wrap_position(self):
+        """
+        Wrap the horizontal position x across the screen.
+        """
+        x = self.x[0, 0]
+        width = config.XWIN
+        x = x % width
+
+        self.x[0, 0] = x
+
+    def randomize_wind(self):
+        """
+        Update wind as a bounded random walk:
+        """
+        delta = random.uniform(-self.wind_std, self.wind_std)
+        self.wind += delta
+        self.wind = max(-self.max_wind, min(self.max_wind, self.wind))
 
 
     def clamp_velocity(self):
@@ -104,6 +121,9 @@ class dynamics:
         self.x[2, 0] = vx
         self.x[3, 0] = vy
 
+        self.wrap_position()
+
+
     def get_state(self):
         """Return (x, y, vx, vy) as simple Python floats."""
         return (
@@ -116,7 +136,10 @@ class dynamics:
     def updateyv(self, force):
         self.x[3, 0] = force
     def step(self, u_x):
-        # u = np.array([[u_x], [u_y]])
+
+        self.step_count += 1
+
+        self.randomize_wind()
         u = np.array([[u_x]])
         d = np.array([[self.wind]])
 
@@ -129,7 +152,8 @@ class dynamics:
         # Velocity clipping
         self.clamp_velocity()
 
-        return self.get_state()
+        px, py, vx, vy = self.get_state()
+        return px, py, vx, vy, float(self.wind)
 
     def step_symbolic(self, X, U):
         """
@@ -140,7 +164,7 @@ class dynamics:
         """
         # Convert constant matrices to CasADi DM
         A = cs.DM(self.A)  # 4x4
-        B = cs.DM(self.B)  # 4x1
+        B = cs.DM(self.B)  # 4x2
         E = cs.DM(self.E)  # 4x1
         c = cs.DM(self.c)  # 4x1
 

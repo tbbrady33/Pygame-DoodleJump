@@ -45,6 +45,7 @@ class Game(Singleton):
 		# Window / Render
 		self.window = pygame.display.set_mode(config.DISPLAY,config.FLAGS)
 		self.clock = pygame.time.Clock()
+		self.wind = 0.0
 
 		# Instances
 		self.camera = Camera()
@@ -94,7 +95,8 @@ class Game(Singleton):
 		# ----------- Update -----------\
 		if self.player.dead:
 			return
-		self.player.handle_event_MPC_input(self.lvl)
+		wind = self.player.handle_event_MPC_input(self.lvl)
+		self.wind = wind
 		self.player.update()
 		self.lvl.update()
 
@@ -117,9 +119,87 @@ class Game(Singleton):
 			self.window.blit(self.gameover_txt,self.gameover_rect)# gameover txt
 		self.window.blit(self.score_txt, self.score_pos)# score txt
 
+		self._draw_wind_indicator()
 		pygame.display.update()# window update
 		self.clock.tick(config.FPS)# max loop/s
 
+	def _draw_wind_indicator(self):
+		"""Draw a small box in the corner with an arrow showing wind direction."""
+		box_w, box_h = 140, 60
+		margin = 10
+
+		# Top-right corner
+		box_rect = pygame.Rect(
+			self.window.get_width() - box_w - margin,
+			margin,
+			box_w,
+			box_h
+		)
+
+		# Background + border
+		pygame.draw.rect(self.window, config.LIGHT_GRAY, box_rect, border_radius=8)
+		pygame.draw.rect(self.window, config.GRAY, box_rect, 2, border_radius=8)
+
+		# Label
+		label = config.SMALL_FONT.render("Wind", True, config.BLACK)
+		self.window.blit(label, (box_rect.x + 8, box_rect.y + 5))
+
+		# Arrow parameters
+		cx = box_rect.centerx
+		cy = box_rect.centery + 5  # a bit lower than the text
+
+		max_arrow_len = box_w // 2 - 25   # leave some margin
+		max_wind_display = 50.0           # should match your dynamics max_wind
+
+		# Clamp wind to displayable range
+		w = max(-max_wind_display, min(max_wind_display, float(self.wind)))
+		arrow_len = 0 if max_wind_display == 0 else (w / max_wind_display) * max_arrow_len
+
+		start_pos = (cx, cy)
+		end_pos = (cx + arrow_len, cy)
+
+		# Draw main arrow line
+		pygame.draw.line(self.window, config.BLACK, start_pos, end_pos, 3)
+
+		# Draw arrow head (only if non-zero wind)
+		if abs(arrow_len) > 1e-2:
+			# Direction of arrow
+			dx = arrow_len
+			dy = 0
+
+			# Normalize direction
+			length = abs(dx)
+			ux = dx / length
+			uy = dy / length  # 0
+
+			# Size of arrow head
+			head_len = 10
+			head_width = 6
+
+			# Tip of arrow
+			tip_x = end_pos[0]
+			tip_y = end_pos[1]
+
+			# Perpendicular vector for arrowhead
+			px = 0
+			py = 1  # vertical
+
+			left_x  = tip_x - ux * head_len + px * head_width
+			left_y  = tip_y - uy * head_len + py * head_width
+			right_x = tip_x - ux * head_len - px * head_width
+			right_y = tip_y - uy * head_len - py * head_width
+
+			pygame.draw.polygon(
+				self.window,
+				config.BLACK,
+				[(tip_x, tip_y), (left_x, left_y), (right_x, right_y)]
+			)
+
+		# Optional: show numeric wind value under arrow
+		wind_str = f"{self.wind:.1f}"
+		val_txt = config.SMALL_FONT.render(wind_str, True, config.BLACK)
+		val_rect = val_txt.get_rect(center=(cx, box_rect.bottom - 12))
+		self.window.blit(val_txt, val_rect)
 
 	def run(self):
 		# ============= MAIN GAME LOOP =============
