@@ -10,7 +10,7 @@ HALF_XWIN,HALF_YWIN = XWIN/2,YWIN/2 # Center
 DISPLAY = (XWIN,YWIN)
 FLAGS = 0 #                           Fullscreen, resizeable... 
 FPS = 60 #                            Render frame rate
-DT = 0.25
+DT = 0.5
 
 # Colors
 BLACK = (0,0,0)
@@ -38,6 +38,7 @@ PLATFORM_DISTANCE_GAP = (50,210)
 MAX_PLATFORM_NUMBER = 10
 BONUS_SPAWN_CHANCE = 10
 BREAKABLE_PLATFORM_CHANCE = 12
+MAX_PLAT = 10
 
 # Fonts
 LARGE_FONT = SysFont("",128)

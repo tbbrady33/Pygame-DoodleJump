@@ -84,13 +84,17 @@ class Platform(Sprite):
 	@property
 	def bonus(self):return self.__bonus
 
+	"""
+	Taking out the springs for the project purposes
+	"""
 	def add_bonus(self,bonus_type:type) -> None:
-		""" Safely adds a bonus to the platform.
-		:param bonus_type type: the type of bonus to add.
-		"""
-		assert issubclass(bonus_type,Bonus), "Not a valid bonus type !"
-		if not self.__bonus and not self.breakable:
-			self.__bonus = bonus_type(self)
+		# """ Safely adds a bonus to the platform.
+		# :param bonus_type type: the type of bonus to add.
+		# """
+		# assert issubclass(bonus_type,Bonus), "Not a valid bonus type !"
+		# if not self.__bonus and not self.breakable:
+		# 	self.__bonus = bonus_type(self)
+		return
 	
 	def remove_bonus(self) -> None:
 		" Safely removes platform's bonus."
