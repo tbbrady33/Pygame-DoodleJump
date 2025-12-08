@@ -41,7 +41,7 @@ class dynamics:
         self.rocket = 0.0   # upward force
 
         self.wind_std = .1
-        self.max_wind = .8
+        self.max_wind = 0
         self.step_count = 0
 
 

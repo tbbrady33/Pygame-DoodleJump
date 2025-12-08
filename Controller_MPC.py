@@ -47,7 +47,7 @@ class MPCController:
             self.opti.subject_to(self.X[:, k+1] == X_next)
 
             cost += (X_next[0] - self.X_target)**2
-            cost += 0.01 * Uk[0]**2
+            cost += 1 * Uk[0]**2
             self.opti.subject_to(Uk <= 1)
             self.opti.subject_to(Uk >= -1)
 
@@ -137,7 +137,7 @@ class MPCController:
 
         try:
             sol = self.opti.solve()
-            print(sol)
+            print(float(sol.value(self.U[0, 0])))
             return float(sol.value(self.U[0, 0]))
         except:
             return 0
